@@ -15,15 +15,20 @@ class FlameBase(Sim1D):
     """ Base class for flames with a single flow domain """
     __slots__ = ('gas',)
 
-    def __init__(self, domains, gas, grid=None):
+    def __init__(self, domains, gas, grid=None, inner_radius=0.0):
         """
         :param gas:
             object to use to evaluate all gas properties and reaction rates
         :param grid:
             array of initial grid points
+        :param inner_radius:
+            inner radius of the domain when considering a tubular geometry
+            (default is 0.0). This is used to create a grid that starts at
+            the inner radius for tubular flames to avoid the singularity at
+            r = 0.
         """
         if grid is None:
-            grid = np.linspace(0.0, 0.1, 6)
+            grid = np.linspace(0.0, 0.1, 6) + inner_radius
         self.flame.grid = grid
         super().__init__(domains)
 
@@ -914,7 +919,7 @@ class CounterflowDiffusionFlame(FlameBase):
     """ A counterflow diffusion flame """
     __slots__ = ('fuel_inlet', 'flame', 'oxidizer_inlet')
 
-    def __init__(self, gas, grid=None, width=None):
+    def __init__(self, gas, grid=None, width=None, inner_radius=0.0):
         """
         :param gas:
             `Solution` (using the IdealGas thermodynamic model) used to
@@ -926,6 +931,9 @@ class CounterflowDiffusionFlame(FlameBase):
         :param width:
             Defines a grid on the interval [0, width] with internal points
             determined automatically by the solver.
+        :param inner_radius:
+            Inner radius of the flame. If set to zero, it will be treated as
+            a flat counterfow flame.
 
         A domain of class `AxisymmetricFlow` named ``flame`` will be created to
         represent the flame. The three domains comprising the stack are stored as
@@ -946,7 +954,7 @@ class CounterflowDiffusionFlame(FlameBase):
         if width is not None:
             if grid is not None:
                 raise ValueError("'grid' and 'width' arguments are mutually exclusive")
-            grid = np.array([0.0, 0.2, 0.4, 0.6, 0.8, 1.0]) * width
+            grid = np.array([0.0, 0.2, 0.4, 0.6, 0.8, 1.0]) * width + inner_radius
 
         super().__init__((self.fuel_inlet, self.flame, self.oxidizer_inlet), gas, grid)
 

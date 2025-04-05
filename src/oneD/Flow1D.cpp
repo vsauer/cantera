@@ -180,6 +180,7 @@ void Flow1D::resize(size_t ncomponents, size_t points)
 
     m_dz.resize(m_points-1);
     m_z.resize(m_points);
+    m_rr.resize(m_points);
 }
 
 void Flow1D::setupGrid(size_t n, const double* z)
@@ -194,6 +195,11 @@ void Flow1D::setupGrid(size_t n, const double* z)
         }
         m_z[j] = z[j];
         m_dz[j-1] = m_z[j] - m_z[j-1];
+    }
+    // Use radial coordinate for tubular flow
+    m_rr = m_z;
+    if (!m_tubular) {
+        std::fill(m_rr.begin(), m_rr.end(), 1);
     }
 }
 
@@ -511,17 +517,17 @@ void Flow1D::evalContinuity(double* x, double* rsd, int* diag,
 {
     // The left boundary has the same form for all cases.
     if (jmin == 0) { // left boundary
-        rsd[index(c_offset_U, jmin)] = -(rho_u(x, jmin+1) - rho_u(x, jmin))/m_dz[jmin]
-                                       -(density(jmin+1)*V(x, jmin+1)
-                                       + density(jmin)*V(x, jmin));
+        rsd[index(c_offset_U, jmin)] = -(m_rr[jmin+1]*rho_u(x, jmin+1) - m_rr[jmin]*rho_u(x, jmin))/m_dz[jmin]
+                                       -(m_rr[jmin+1]*density(jmin+1)*V(x, jmin+1)
+                                       + m_rr[jmin]*density(jmin)*V(x, jmin));
         diag[index(c_offset_U, jmin)] = 0; // Algebraic constraint
     }
 
     if (jmax == m_points - 1) { // right boundary
         if (m_usesLambda) { // zero mass flux
-            rsd[index(c_offset_U, jmax)] = rho_u(x, jmax);
+            rsd[index(c_offset_U, jmax)] = m_rr[jmax]*rho_u(x, jmax);
         } else { // zero gradient, same for unstrained or free-flow
-            rsd[index(c_offset_U, jmax)] = rho_u(x, jmax) - rho_u(x, jmax-1);
+            rsd[index(c_offset_U, jmax)] = m_rr[jmax]*rho_u(x, jmax) - m_rr[jmax-1]*rho_u(x, jmax-1);
         }
         diag[index(c_offset_U, jmax)] = 0; // Algebraic constraint
     }
@@ -535,8 +541,8 @@ void Flow1D::evalContinuity(double* x, double* rsd, int* diag,
             // mass flow rate information to the left (j+1 -> j) from the value
             // specified at the right boundary. The lambda information propagates
             // in the opposite direction.
-            rsd[index(c_offset_U, j)] = -(rho_u(x, j+1) - rho_u(x, j))/m_dz[j]
-                                        -(density(j+1)*V(x, j+1) + density(j)*V(x, j));
+            rsd[index(c_offset_U, j)] = -(m_rr[j+1]*rho_u(x, j+1) - m_rr[j]*rho_u(x, j))/m_dz[j]
+                                        -(m_rr[j+1]*density(j+1)*V(x, j+1) + m_rr[j]*density(j)*V(x, j));
             diag[index(c_offset_U, j)] = 0; // Algebraic constraint
         }
     } else if (m_isFree) { // "free-flow"
@@ -587,7 +593,7 @@ void Flow1D::evalMomentum(double* x, double* rsd, int* diag,
     size_t j0 = std::max<size_t>(jmin, 1);
     size_t j1 = std::min(jmax, m_points-2);
     for (size_t j = j0; j <= j1; j++) { // interior points
-        rsd[index(c_offset_V, j)] = (shear(x, j) - lambda(x, j)
+        rsd[index(c_offset_V, j)] = (shear(x, j) / m_rr[j] - lambda(x, j)
                                      - rho_u(x, j) * dVdz(x, j)
                                      - m_rho[j] * V(x, j) * V(x, j)) / m_rho[j];
         if (!m_twoPointControl) {
@@ -1264,6 +1270,17 @@ void Flow1D::enableTwoPointControl(bool twoPointControl)
     } else {
         throw CanteraError("Flow1D::enableTwoPointControl",
             "Invalid operation: two-point control can only be used"
+            "with axisymmetric flames.");
+    }
+}
+
+void Flow1D::enableTubular(bool tubular)
+{
+    if (isStrained()) {
+        m_tubular = tubular;
+    } else {
+        throw CanteraError("Flow1D::enableTubular",
+            "Invalid operation: tubular flow can only be used"
             "with axisymmetric flames.");
     }
 }

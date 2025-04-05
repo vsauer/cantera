@@ -478,6 +478,16 @@ class FlameBase(Sim1D):
     def two_point_control_enabled(self, enable):
         self.flame.two_point_control_enabled = enable
 
+    @property
+    def tubular_enabled(self):
+        """
+        Get/Set whether or not to use tubular geometry.
+        """
+        return self.flame.tubular_enabled
+    
+    @tubular_enabled.setter
+    def tubular(self, enable):
+        self.flame.tubular_enabled = enable
 
 def _trim(docstring):
     """Remove block indentation from a docstring."""

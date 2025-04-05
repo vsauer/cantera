@@ -679,6 +679,13 @@ cdef class FlowBase(Domain1D):
             return self.flow.twoPointControlEnabled()
         def __set__(self, enable):
             self.flow.enableTwoPointControl(<cbool>enable)
+    
+    property tubular_enabled:
+        """ Get/Set the state of the tubular flame control """
+        def __get__(self):
+            return self.flow.tubularEnabled()
+        def __set__(self, enable):
+            self.flow.enableTubular(<cbool>enable)
 
 
 cdef class FreeFlow(FlowBase):

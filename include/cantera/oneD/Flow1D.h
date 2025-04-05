@@ -823,8 +823,8 @@ protected:
      * @param[in] j  The grid point index at which the derivative is computed.
      */
     double conduction(const double* x, size_t j) const {
-        double A_left = m_tcon[j-1]*(T(x, j) - T(x, j-1)) / (z(j) - z(j-1));
-        double A_right = m_tcon[j]*(T(x, j+1) - T(x, j)) / (z(j+1) - z(j));
+        double A_left = m_rr[j-1] * m_tcon[j-1]*(T(x, j) - T(x, j-1)) / (z(j) - z(j-1));
+        double A_right = m_rr[j] * m_tcon[j]*(T(x, j+1) - T(x, j)) / (z(j+1) - z(j));
         return -2.0*(A_right - A_left) / (z(j+1) - z(j-1));
     }
 

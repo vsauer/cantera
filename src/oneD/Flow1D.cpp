@@ -673,7 +673,7 @@ void Flow1D::evalEnergy(double* x, double* rsd, int* diag,
             }
 
             rsd[index(c_offset_T, j)] = - m_cp[j]*rho_u(x, j)*dTdz(x, j)
-                                        - conduction(x, j) - sum;
+                                        - conduction(x, j) / m_rr[j] - sum;
             rsd[index(c_offset_T, j)] /= (m_rho[j]*m_cp[j]);
             rsd[index(c_offset_T, j)] -= (m_qdotRadiation[j] / (m_rho[j] * m_cp[j]));
             if (!m_twoPointControl || (m_z[j] != m_tLeft && m_z[j] != m_tRight)) {
@@ -761,9 +761,9 @@ void Flow1D::evalSpecies(double* x, double* rsd, int* diag,
     for (size_t j = j0; j <= j1; j++) {
         for (size_t k = 0; k < m_nsp; k++) {
             double convec = rho_u(x, j)*dYdz(x, k, j);
-            double diffus = 2*(m_flux(k, j) - m_flux(k, j-1)) / (z(j+1) - z(j-1));
+            double diffus = 2*(m_rr[j] * m_flux(k, j) - m_rr[j-1] * m_flux(k, j-1)) / (z(j+1) - z(j-1));
             rsd[index(c_offset_Y + k, j)] = (m_wt[k]*m_wdot(k, j)
-                                              - convec - diffus) / m_rho[j]
+                                              - convec - diffus / m_rr[j]) / m_rho[j]
                                             - rdt*(Y(x, k, j) - Y_prev(k, j));
             diag[index(c_offset_Y + k, j)] = 1;
         }

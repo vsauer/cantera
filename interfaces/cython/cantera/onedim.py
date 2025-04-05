@@ -486,7 +486,7 @@ class FlameBase(Sim1D):
         return self.flame.tubular_enabled
     
     @tubular_enabled.setter
-    def tubular(self, enable):
+    def tubular_enabled(self, enable):
         self.flame.tubular_enabled = enable
 
 def _trim(docstring):

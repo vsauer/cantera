@@ -483,11 +483,16 @@ class FlameBase(Sim1D):
         """
         Get/Set whether or not to use tubular geometry.
         """
-        return self.flame.tubular_enabled
+        return self.domains[1].tubular_enabled
     
     @tubular_enabled.setter
     def tubular_enabled(self, enable):
-        self.flame.tubular_enabled = enable
+        self.domains[1].tubular_enabled = enable
+
+    @property
+    def tubular_grid(self):
+        """ The tubular grid for this domain """
+        return self.domains[1].tubular_grid
 
 def _trim(docstring):
     """Remove block indentation from a docstring."""

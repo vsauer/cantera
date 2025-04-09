@@ -330,15 +330,6 @@ public:
     }
     //! @}
 
-    //! Set the tubular flow condition. This is a special case of the
-    //! axisymmetric flow condition.
-    void enableTubular(bool tubular);
-
-    //! Returns the state of the tubular flow condition
-    bool tubularEnabled() const {
-        return m_tubular;
-    }
-
     //! `true` if the energy equation is solved at point `j` or `false` if a fixed
     //! temperature condition is imposed.
     bool doEnergy(size_t j) {
@@ -808,8 +799,8 @@ protected:
      * @param[in] j  The grid point index at which the derivative is computed.
      */
     double shear(const double* x, size_t j) const {
-        double A_left = m_rr[j-1]*m_visc[j-1]*(V(x, j) - V(x, j-1)) / (z(j) - z(j-1));
-        double A_right = m_rr[j]*m_visc[j]*(V(x, j+1) - V(x, j)) / (z(j+1) - z(j));
+        double A_left = rr(j-1)*m_visc[j-1]*(V(x, j) - V(x, j-1)) / (z(j) - z(j-1));
+        double A_right = rr(j)*m_visc[j]*(V(x, j+1) - V(x, j)) / (z(j+1) - z(j));
         return 2.0*(A_right - A_left) / (z(j+1) - z(j-1));
     }
 
@@ -823,8 +814,8 @@ protected:
      * @param[in] j  The grid point index at which the derivative is computed.
      */
     double conduction(const double* x, size_t j) const {
-        double A_left = m_rr[j-1] * m_tcon[j-1]*(T(x, j) - T(x, j-1)) / (z(j) - z(j-1));
-        double A_right = m_rr[j] * m_tcon[j]*(T(x, j+1) - T(x, j)) / (z(j+1) - z(j));
+        double A_left = rr(j-1) * m_tcon[j-1]*(T(x, j) - T(x, j-1)) / (z(j) - z(j-1));
+        double A_right = rr(j) * m_tcon[j]*(T(x, j+1) - T(x, j)) / (z(j+1) - z(j));
         return -2.0*(A_right - A_left) / (z(j+1) - z(j-1));
     }
 
@@ -878,10 +869,6 @@ protected:
     //! #m_nsp × #m_points, where `m_diff[k + j*m_nsp]` contains the value for species
     //! `k` at point `j`.
     vector<double> m_diff;
-
-    //! Radial poisition of each grid point in the domain. The first element is the left
-    //! boundary and the last element is the right boundary.
-    vector<double> m_rr;
 
     //! Vector of size #m_nsp × #m_nsp × #m_points for saving multicomponent
     //! diffusion coefficients. Order of elements is defined by mindex().
@@ -966,9 +953,6 @@ protected:
 
     //! Flag for activating two-point flame control
     bool m_twoPointControl = false;
-    
-    //! Flag that is `true` for tubular counterflow flames and `false` for planar
-    bool m_tubular = false;
     //! @}
 
     //! radiative heat loss vector

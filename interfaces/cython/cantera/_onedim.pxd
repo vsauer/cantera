@@ -37,7 +37,10 @@ cdef extern from "cantera/oneD/Domain1D.h":
         double transient_rtol(size_t)
         double transient_atol(size_t)
         double z(size_t)
+        double rr(size_t)
         void setupGrid(size_t, double*) except +translate_exception
+        void enableTubular(cbool) except +translate_exception
+        cbool tubularEnabled()
         void setID(string)
         string& id()
         string domainType "type"()
@@ -94,8 +97,6 @@ cdef extern from "cantera/oneD/Flow1D.h":
         void setAxisymmetricFlow()
         void enableTwoPointControl(cbool) except +translate_exception
         cbool twoPointControlEnabled()
-        void enableTubular(cbool) except +translate_exception
-        cbool tubularEnabled()
         double leftControlPointTemperature() except +translate_exception
         double leftControlPointCoordinate() except +translate_exception
         void setLeftControlPointTemperature(double) except +translate_exception

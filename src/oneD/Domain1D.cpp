@@ -60,6 +60,7 @@ void Domain1D::resize(size_t nv, size_t np)
     m_atol_ts.resize(m_nv, 1.0e-11);
     m_points = np;
     m_z.resize(np, 0.0);
+    m_rr.resize(np, 0.0);
     m_slast.resize(m_nv * m_points, 0.0);
     locate();
 }
@@ -229,6 +230,11 @@ void Domain1D::setupGrid(size_t n, const double* z)
         for (size_t j = 0; j < m_points; j++) {
             m_z[j] = z[j];
         }
+        // Use radial coordinate for tubular flow
+        m_rr = m_z;
+        if (!m_tubular) {
+            std::fill(m_rr.begin(), m_rr.end(), 1);
+        }
     }
 }
 
@@ -293,6 +299,16 @@ void Domain1D::_getInitialSoln(double* x)
 double Domain1D::initialValue(size_t n, size_t j)
 {
     throw NotImplementedError("Domain1D::initialValue");
+}
+
+void Domain1D::enableTubular(bool tubular)
+{
+    m_tubular = tubular;
+    if (m_tubular) {
+        m_rr = m_z;
+    } else {
+        std::fill(m_rr.begin(), m_rr.end(), 1);
+    }
 }
 
 } // namespace

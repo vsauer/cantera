@@ -516,6 +516,11 @@ public:
     //! @param soln  Pointer to the local portion of the system state vector
     void setProfile(const string& name, double* values, double* soln);
 
+    //! Get the coordinate [m] of the radial point with local index `jlocal`
+    double rr(size_t jlocal) const {
+        return m_rr[jlocal];
+    }
+
     //! Access the array of grid coordinates [m]
     vector<double>& grid() {
         return m_z;
@@ -535,6 +540,18 @@ public:
 
     //! called to set up initial grid, and after grid refinement
     virtual void setupGrid(size_t n, const double* z);
+
+    //! Flag that is `true` for tubular counterflow flames and `false` for planar
+    bool m_tubular = false;
+
+    //! Set the tubular flow condition. This is a special case of the
+    //! axisymmetric flow condition.
+    void enableTubular(bool tubular);
+
+    //! Returns the state of the tubular flow condition
+    bool tubularEnabled() const {
+        return m_tubular;
+    }
 
     /**
      * Writes some or all initial solution values into the global solution
@@ -593,6 +610,7 @@ protected:
     vector<double> m_atol_ss; //!< Absolute tolerances for steady mode
     vector<double> m_atol_ts; //!< Absolute tolerances for transient mode
     vector<double> m_z; //!< 1D spatial grid coordinates
+    vector<double> m_rr; //!< 1D radial grid coordinates
 
     //! Parent OneDim simulation containing this and adjacent domains
     OneDim* m_container = nullptr;

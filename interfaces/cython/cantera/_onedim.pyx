@@ -687,6 +687,15 @@ cdef class FlowBase(Domain1D):
         def __set__(self, enable):
             self.flow.enableTubular(<cbool>enable)
 
+    property tubular_grid:
+        """ Get/Set the tubular grid spacing """
+        def __get__(self):
+            cdef np.ndarray[np.double_t, ndim=1] grid = np.empty(self.n_points)
+            cdef int i
+            for i in range(self.n_points):
+                grid[i] = self.flow.rr(i)
+            return grid
+
 
 cdef class FreeFlow(FlowBase):
     r"""A free flow domain. The equations solved are standard equations for adiabatic

@@ -478,21 +478,21 @@ class FlameBase(Sim1D):
     def two_point_control_enabled(self, enable):
         self.flame.two_point_control_enabled = enable
 
-    @property
-    def tubular_enabled(self):
-        """
-        Get/Set whether or not to use tubular geometry.
-        """
-        return self.domains[1].tubular_enabled
+    # @property
+    # def tubular_enabled(self):
+    #     """
+    #     Get/Set whether or not to use tubular geometry.
+    #     """
+    #     return self.flame.tubular_enabled
     
-    @tubular_enabled.setter
-    def tubular_enabled(self, enable):
-        self.domains[1].tubular_enabled = enable
+    # @tubular_enabled.setter
+    # def tubular_enabled(self, enable):
+    #     self.flame.tubular_enabled = enable
 
-    @property
-    def tubular_grid(self):
-        """ The tubular grid for this domain """
-        return self.domains[1].tubular_grid
+    # @property
+    # def tubular_grid(self):
+    #     """ The tubular grid for this domain """
+    #     return self.flame.tubular_grid
 
 def _trim(docstring):
     """Remove block indentation from a docstring."""
@@ -1285,6 +1285,9 @@ class TubularDiffusionFlame(CounterflowDiffusionFlame):
 
         #: `AxisymmetricFlow` domain representing the flame
         self.flame = AxisymmetricFlow(gas, name='flame')
+        
+        #: Set the flame to be tubular
+        self.flame.set_tubular_flow()
 
         if width is not None:
             if grid is not None:

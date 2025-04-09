@@ -606,6 +606,10 @@ cdef class FlowBase(Domain1D):
         """
         self.flow.setAxisymmetricFlow()
 
+    def set_tubular_flow(self):
+        """ Set flow configuration for tubular flames. """
+        self.flow.setTubularFlow()
+
     @property
     def type(self):
         """
@@ -679,22 +683,6 @@ cdef class FlowBase(Domain1D):
             return self.flow.twoPointControlEnabled()
         def __set__(self, enable):
             self.flow.enableTwoPointControl(<cbool>enable)
-    
-    property tubular_enabled:
-        """ Get/Set the state of the tubular flame control """
-        def __get__(self):
-            return self.flow.tubularEnabled()
-        def __set__(self, enable):
-            self.flow.enableTubular(<cbool>enable)
-
-    property tubular_grid:
-        """ Get/Set the tubular grid spacing """
-        def __get__(self):
-            cdef np.ndarray[np.double_t, ndim=1] grid = np.empty(self.n_points)
-            cdef int i
-            for i in range(self.n_points):
-                grid[i] = self.flow.rr(i)
-            return grid
 
 
 cdef class FreeFlow(FlowBase):

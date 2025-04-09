@@ -209,6 +209,18 @@ public:
         m_usesLambda = false;
     }
 
+    //! Set flow configuration for tubular flow, using specified inlet mass fluxes.
+    void setTubularFlow() {
+        if (isStrained()) {
+            m_isTubular = true;
+            m_rr = m_z;
+        } else {
+            throw CanteraError("Flow1D::setTubularFlow",
+                "Invalid operation: tubular flow can only be used"
+                "with axisymmetric flames.");
+        }
+    }
+
     //! Specify that the energy equation should be solved at point `j`.
     //! The converse of this method is fixTemperature().
     //! @param j  Point at which to enable the energy equation. `npos` means all points.
@@ -799,8 +811,8 @@ protected:
      * @param[in] j  The grid point index at which the derivative is computed.
      */
     double shear(const double* x, size_t j) const {
-        double A_left = rr(j-1)*m_visc[j-1]*(V(x, j) - V(x, j-1)) / (z(j) - z(j-1));
-        double A_right = rr(j)*m_visc[j]*(V(x, j+1) - V(x, j)) / (z(j+1) - z(j));
+        double A_left = m_rr[j-1]*m_visc[j-1]*(V(x, j) - V(x, j-1)) / (z(j) - z(j-1));
+        double A_right = m_rr[j]*m_visc[j]*(V(x, j+1) - V(x, j)) / (z(j+1) - z(j));
         return 2.0*(A_right - A_left) / (z(j+1) - z(j-1));
     }
 
@@ -814,8 +826,8 @@ protected:
      * @param[in] j  The grid point index at which the derivative is computed.
      */
     double conduction(const double* x, size_t j) const {
-        double A_left = rr(j-1) * m_tcon[j-1]*(T(x, j) - T(x, j-1)) / (z(j) - z(j-1));
-        double A_right = rr(j) * m_tcon[j]*(T(x, j+1) - T(x, j)) / (z(j+1) - z(j));
+        double A_left = m_rr[j-1]*m_tcon[j-1]*(T(x, j) - T(x, j-1)) / (z(j) - z(j-1));
+        double A_right = m_rr[j]*m_tcon[j]*(T(x, j+1) - T(x, j)) / (z(j+1) - z(j));
         return -2.0*(A_right - A_left) / (z(j+1) - z(j-1));
     }
 
@@ -951,6 +963,9 @@ protected:
     //! @see setFreeFlow, setAxisymmetricFlow, setUnstrainedFlow
     bool m_usesLambda;
 
+    //! Flag that is `true` for tubular counterflow flames and `false` for planar
+    bool m_isTubular = false;
+    
     //! Flag for activating two-point flame control
     bool m_twoPointControl = false;
     //! @}
@@ -996,6 +1011,9 @@ protected:
 
     //! Temperature of the right control point when two-point control is enabled
     double m_tRight = Undef;
+
+    //! 1D radial grid coordinates
+    vector<double> m_rr;
 
 public:
     //! Location of the point where temperature is fixed

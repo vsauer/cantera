@@ -125,6 +125,11 @@ string Flow1D::domainType() const {
         return "free-flow";
     }
     if (m_usesLambda) {
+        if (m_isTubular) {
+            return "tubular axisymmetric-flow";
+        } else {
+            return "axisymmetric-flow";
+        }
         return "axisymmetric-flow";
     }
     return "unstrained-flow";
@@ -198,7 +203,7 @@ void Flow1D::setupGrid(size_t n, const double* z)
     }
     // Use radial coordinate for tubular flow
     m_rr = m_z;
-    if (!m_tubular) {
+    if (!m_isTubular) {
         std::fill(m_rr.begin(), m_rr.end(), 1);
     }
 }
@@ -517,9 +522,9 @@ void Flow1D::evalContinuity(double* x, double* rsd, int* diag,
 {
     // The left boundary has the same form for all cases.
     if (jmin == 0) { // left boundary
-        rsd[index(c_offset_U, jmin)] = -(rr(jmin+1)*rho_u(x, jmin+1) - rr(jmin)*rho_u(x, jmin))/m_dz[jmin]
-                                       -(rr(jmin+1)*density(jmin+1)*V(x, jmin+1)
-                                       + rr(jmin)*density(jmin)*V(x, jmin));
+        rsd[index(c_offset_U, jmin)] = -(m_rr[jmin+1]*rho_u(x, jmin+1) - m_rr[jmin]*rho_u(x, jmin))/m_dz[jmin]
+                                       -(m_rr[jmin+1]*density(jmin+1)*V(x, jmin+1)
+                                       + m_rr[jmin]*density(jmin)*V(x, jmin));
         diag[index(c_offset_U, jmin)] = 0; // Algebraic constraint
     }
 
@@ -541,8 +546,8 @@ void Flow1D::evalContinuity(double* x, double* rsd, int* diag,
             // mass flow rate information to the left (j+1 -> j) from the value
             // specified at the right boundary. The lambda information propagates
             // in the opposite direction.
-            rsd[index(c_offset_U, j)] = -(rr(j+1)*rho_u(x, j+1) - rr(j)*rho_u(x, j))/m_dz[j]
-                                        -(rr(j+1)*density(j+1)*V(x, j+1) + rr(j)*density(j)*V(x, j));
+            rsd[index(c_offset_U, j)] = -(m_rr[j+1]*rho_u(x, j+1) - m_rr[j]*rho_u(x, j))/m_dz[j]
+                                        -(m_rr[j+1]*density(j+1)*V(x, j+1) + m_rr[j]*density(j)*V(x, j));
             diag[index(c_offset_U, j)] = 0; // Algebraic constraint
         }
     } else if (m_isFree) { // "free-flow"
@@ -593,7 +598,7 @@ void Flow1D::evalMomentum(double* x, double* rsd, int* diag,
     size_t j0 = std::max<size_t>(jmin, 1);
     size_t j1 = std::min(jmax, m_points-2);
     for (size_t j = j0; j <= j1; j++) { // interior points
-        rsd[index(c_offset_V, j)] = (shear(x, j) / rr(j) - lambda(x, j)
+        rsd[index(c_offset_V, j)] = (shear(x, j) / m_rr[j] - lambda(x, j)
                                      - rho_u(x, j) * dVdz(x, j)
                                      - m_rho[j] * V(x, j) * V(x, j)) / m_rho[j];
         if (!m_twoPointControl) {
@@ -673,7 +678,7 @@ void Flow1D::evalEnergy(double* x, double* rsd, int* diag,
             }
 
             rsd[index(c_offset_T, j)] = - m_cp[j]*rho_u(x, j)*dTdz(x, j)
-                                        - conduction(x, j) / rr(j) - sum;
+                                        - conduction(x, j) / m_rr[j] - sum;
             rsd[index(c_offset_T, j)] /= (m_rho[j]*m_cp[j]);
             rsd[index(c_offset_T, j)] -= (m_qdotRadiation[j] / (m_rho[j] * m_cp[j]));
             if (!m_twoPointControl || (m_z[j] != m_tLeft && m_z[j] != m_tRight)) {
@@ -761,9 +766,9 @@ void Flow1D::evalSpecies(double* x, double* rsd, int* diag,
     for (size_t j = j0; j <= j1; j++) {
         for (size_t k = 0; k < m_nsp; k++) {
             double convec = rho_u(x, j)*dYdz(x, k, j);
-            double diffus = 2*(rr(j) * m_flux(k, j) - rr(j-1) * m_flux(k, j-1)) / (z(j+1) - z(j-1));
+            double diffus = 2*(m_rr[j] * m_flux(k, j) - m_rr[j-1] * m_flux(k, j-1)) / (z(j+1) - z(j-1));
             rsd[index(c_offset_Y + k, j)] = (m_wt[k]*m_wdot(k, j)
-                                              - convec - diffus / rr(j)) / m_rho[j]
+                                              - convec - diffus / m_rr[j]) / m_rho[j]
                                             - rdt*(Y(x, k, j) - Y_prev(k, j));
             diag[index(c_offset_Y + k, j)] = 1;
         }

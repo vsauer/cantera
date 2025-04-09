@@ -934,7 +934,7 @@ class CounterflowDiffusionFlame(FlameBase):
     """ A counterflow diffusion flame """
     __slots__ = ('fuel_inlet', 'flame', 'oxidizer_inlet')
 
-    def __init__(self, gas, grid=None, width=None, inner_radius=0.0):
+    def __init__(self, gas, grid=None, width=None):
         """
         :param gas:
             `Solution` (using the IdealGas thermodynamic model) used to
@@ -946,9 +946,6 @@ class CounterflowDiffusionFlame(FlameBase):
         :param width:
             Defines a grid on the interval [0, width] with internal points
             determined automatically by the solver.
-        :param inner_radius:
-            Inner radius of the flame. If set to zero, it will be treated as
-            a flat counterfow flame.
 
         A domain of class `AxisymmetricFlow` named ``flame`` will be created to
         represent the flame. The three domains comprising the stack are stored as
@@ -969,7 +966,7 @@ class CounterflowDiffusionFlame(FlameBase):
         if width is not None:
             if grid is not None:
                 raise ValueError("'grid' and 'width' arguments are mutually exclusive")
-            grid = np.array([0.0, 0.2, 0.4, 0.6, 0.8, 1.0]) * width + inner_radius
+            grid = np.array([0.0, 0.2, 0.4, 0.6, 0.8, 1.0]) * width
 
         super().__init__((self.fuel_inlet, self.flame, self.oxidizer_inlet), gas, grid)
 
@@ -1251,6 +1248,52 @@ class CounterflowDiffusionFlame(FlameBase):
             vals[i] = self.gas.equivalence_ratio(Yf, Yo, "mass")
         return vals
 
+
+class TubularDiffusionFlame(CounterflowDiffusionFlame):
+    """ A tubular diffusion flame """
+    __slots__ = ('fuel_inlet', 'flame', 'oxidizer_inlet')
+
+    def __init__(self, gas, grid=None, width=None, inner_radius=None):
+        """
+        :param gas:
+            `Solution` (using the IdealGas thermodynamic model) used to
+            evaluate all gas properties and reaction rates.
+        :param grid:
+            A list of points to be used as the initial grid. Not recommended
+            unless solving only on a fixed grid; Use the `width` parameter
+            instead.
+        :param width:
+            Defines a grid on the interval [inner_radius, width] with internal
+            points determined automatically by the solver.
+        :param inner_radius:
+            Inner radius of the flame. Must be greater than zero.
+
+        A domain of class `AxisymmetricFlow` named ``flame`` will be created to
+        represent the flame. The three domains comprising the stack are stored as
+        ``self.fuel_inlet``, ``self.flame``, and ``self.oxidizer_inlet``. The
+        flame is assumed to be tubular, with the fuel inlet at the inner radius
+        and the oxidizer inlet at the outer radius.
+        """
+
+        #: `Inlet1D` at the left of the domain representing the fuel mixture
+        self.fuel_inlet = Inlet1D(name='fuel_inlet', phase=gas)
+        self.fuel_inlet.T = gas.T
+
+        #: `Inlet1D` at the right of the domain representing the oxidizer mixture
+        self.oxidizer_inlet = Inlet1D(name='oxidizer_inlet', phase=gas)
+        self.oxidizer_inlet.T = gas.T
+
+        #: `AxisymmetricFlow` domain representing the flame
+        self.flame = AxisymmetricFlow(gas, name='flame')
+
+        if width is not None:
+            if grid is not None:
+                raise ValueError("'grid' and 'width' arguments are mutually exclusive")
+            if inner_radius is None or inner_radius <= 0.0:
+                raise ValueError("'inner_radius' must be greater than zero")
+            grid = np.array([0.0, 0.2, 0.4, 0.6, 0.8, 1.0]) * width + inner_radius
+
+        super(CounterflowDiffusionFlame, self).__init__((self.fuel_inlet, self.flame, self.oxidizer_inlet), gas, grid)
 
 class ImpingingJet(FlameBase):
     """An axisymmetric flow impinging on a surface at normal incidence."""

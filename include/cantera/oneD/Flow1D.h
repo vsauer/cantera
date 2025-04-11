@@ -214,6 +214,7 @@ public:
         if (isStrained()) {
             m_isTubular = true;
             m_rr = m_z;
+            m_coef = .5;
         } else {
             throw CanteraError("Flow1D::setTubularFlow",
                 "Invalid operation: tubular flow can only be used"
@@ -1014,6 +1015,7 @@ protected:
 
     //! 1D radial grid coordinates
     vector<double> m_rr;
+    double m_coef = 1.0; //!< Coefficient for the radial coordinate continuity equation
 
 public:
     //! Location of the point where temperature is fixed

@@ -523,8 +523,8 @@ void Flow1D::evalContinuity(double* x, double* rsd, int* diag,
     // The left boundary has the same form for all cases.
     if (jmin == 0) { // left boundary
         rsd[index(c_offset_U, jmin)] = -(m_rr[jmin+1]*rho_u(x, jmin+1) - m_rr[jmin]*rho_u(x, jmin))/m_dz[jmin]
-                                       -(m_rr[jmin+1]*density(jmin+1)*V(x, jmin+1)
-                                       + m_rr[jmin]*density(jmin)*V(x, jmin));
+                                       - (m_rr[jmin+1]*density(jmin+1)*V(x, jmin+1)
+                                       + m_rr[jmin]*density(jmin)*V(x, jmin)) * m_coef;
         diag[index(c_offset_U, jmin)] = 0; // Algebraic constraint
     }
 
@@ -547,7 +547,7 @@ void Flow1D::evalContinuity(double* x, double* rsd, int* diag,
             // specified at the right boundary. The lambda information propagates
             // in the opposite direction.
             rsd[index(c_offset_U, j)] = -(m_rr[j+1]*rho_u(x, j+1) - m_rr[j]*rho_u(x, j))/m_dz[j]
-                                        -(m_rr[j+1]*density(j+1)*V(x, j+1) + m_rr[j]*density(j)*V(x, j));
+                                        -(m_rr[j+1]*density(j+1)*V(x, j+1) + m_rr[j]*density(j)*V(x, j)) * m_coef;
             diag[index(c_offset_U, j)] = 0; // Algebraic constraint
         }
     } else if (m_isFree) { // "free-flow"

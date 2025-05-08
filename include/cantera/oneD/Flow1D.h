@@ -222,6 +222,20 @@ public:
         }
     }
 
+    //! Set flow configuration for slotted counterflow flames, using specified inlet
+    //! mass fluxes.
+    void setSlotCounterflow() {
+        if (isStrained()) {
+            m_isSlotted = true;
+            m_coef = .5;
+        }
+        else {
+            throw CanteraError("Flow1D::setSlotCounterflow",
+                "Invalid operation: slotted counterflow can only be used"
+                "with strained flames.");
+        }
+    }
+
     //! Specify that the energy equation should be solved at point `j`.
     //! The converse of this method is fixTemperature().
     //! @param j  Point at which to enable the energy equation. `npos` means all points.
@@ -966,6 +980,9 @@ protected:
 
     //! Flag that is `true` for tubular counterflow flames and `false` for planar
     bool m_isTubular = false;
+
+    //! Flag that is `true` slotted flow and `false` for axisymmetric flow
+    bool m_isSlotted = false;
     
     //! Flag for activating two-point flame control
     bool m_twoPointControl = false;

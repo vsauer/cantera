@@ -127,10 +127,12 @@ string Flow1D::domainType() const {
     if (m_usesLambda) {
         if (m_isTubular) {
             return "tubular axisymmetric-flow";
+        } else if (m_isSlotted) {
+            return "slot counterflow";
         } else {
             return "axisymmetric-flow";
         }
-        return "axisymmetric-flow";
+        // return "axisymmetric-flow";
     }
     return "unstrained-flow";
 }

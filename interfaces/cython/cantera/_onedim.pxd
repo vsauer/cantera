@@ -93,6 +93,7 @@ cdef extern from "cantera/oneD/Flow1D.h":
         void setFreeFlow()
         void setAxisymmetricFlow()
         void setTubularFlow()
+        void setSlotCounterflow()
         void enableTwoPointControl(cbool) except +translate_exception
         cbool twoPointControlEnabled()
         double leftControlPointTemperature() except +translate_exception

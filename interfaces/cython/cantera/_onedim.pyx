@@ -610,6 +610,10 @@ cdef class FlowBase(Domain1D):
         """ Set flow configuration for tubular flames. """
         self.flow.setTubularFlow()
 
+    def set_slot_counterflow(self):
+        """ Set flow configuration for slot counterflow flames. """
+        self.flow.setSlotCounterflow()
+
     @property
     def type(self):
         """
